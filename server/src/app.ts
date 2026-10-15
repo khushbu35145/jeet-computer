@@ -5,6 +5,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import path from 'path';
+import fs from 'fs';
 import apiRoutes from './routes';
 import { errorHandler, AppError } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -66,10 +67,22 @@ app.get('/health', (_req: Request, res: Response) => {
 // Mount /api/v1 routes
 app.use('/api/v1', apiLimiter, apiRoutes);
 
-// Catch-all 404 handler for API routes
-app.all('*', (req: Request, _res: Response, next) => {
-  next(new AppError(`The requested endpoint '${req.originalUrl}' does not exist on this server.`, 404));
-});
+// Serve client build if available (production single-service deployment)
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req: Request, res: Response, next) => {
+    if (req.path.startsWith('/api/') || req.path === '/health') {
+      return next(new AppError(`The requested endpoint '${req.originalUrl}' does not exist on this server.`, 404));
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+} else {
+  // Catch-all 404 handler for API routes
+  app.all('*', (req: Request, _res: Response, next) => {
+    next(new AppError(`The requested endpoint '${req.originalUrl}' does not exist on this server.`, 404));
+  });
+}
 
 // Centralized Error Handler
 app.use(errorHandler);
