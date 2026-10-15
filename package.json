@@ -1,0 +1,17 @@
+{
+  "name": "jeet-computer-education-web-platform",
+  "version": "1.0.0",
+  "description": "Production Web Development Services Platform for JEET Computer Education, Pali, Rajasthan",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "build": "npm --prefix client run build && npm --prefix server run build",
+    "start": "npm --prefix server run start",
+    "test": "npm --prefix server test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
